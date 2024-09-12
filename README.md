@@ -1,6 +1,10 @@
 #  howlongtobeat-js
 
-This project provides a Node.js API for interacting with the HowLongToBeat website, allowing you to search for games and retrieve information about their completion times.
+A simple project that provides a Node.js API for interacting with the HowLongToBeat website, allowing you to search for games and retrieve information about their completion times.
+
+Heavily inspired by [ScrappyCocco's HowLongToBeat Python API](https://github.com/ScrappyCocco/HowLongToBeat-PythonAPI) and [ckatzorke's howlongtobeat javascript API](https://github.com/ckatzorke/howlongtobeat).
+
+This project was made due to the lack of activity by ckatzorke on their repo, whose api i was utilizing in another project, but it broke due to changed made by HowLongToBeat. 
 
 ## Features
 
