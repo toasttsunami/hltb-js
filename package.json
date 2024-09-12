@@ -1,0 +1,30 @@
+{
+  "name": "hltb-js",
+  "version": "1.0.0",
+  "description": "Collects data from howlongtobeat.com using game title or id",
+  "main": "HowLongToBeat.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/toasttsunami/hltb-js.git"
+  },
+  "keywords": [
+    "howlongtobeat"
+  ],
+  "author": "Conturna",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/toasttsunami/hltb-js/issues"
+  },
+  "homepage": "https://github.com/toasttsunami/hltb-js#readme",
+  "dependencies": {
+    "axios": "^1.6.5",
+    "cheerio": "^1.0.0-rc.12",
+    "user-agents": "^1.1.80"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
