@@ -1,8 +1,8 @@
 {
-  "name": "hltb-js",
-  "version": "1.0.0",
+  "name": "howlongtobeat-js",
+  "version": "1.0.1",
   "description": "Collects data from howlongtobeat.com using game title or id",
-  "main": "HowLongToBeat.js",
+  "main": "src/HowLongToBeat.js",
   "scripts": {
     "test": "jest"
   },
