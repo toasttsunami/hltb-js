@@ -26,8 +26,6 @@ class SearchInformations {
       const values = [...scriptContent.matchAll(concatRegex)].map(
         (match) => match[1]
       );
-      console.log(values.join(""));
-
       return values.join("");
     }
 
@@ -152,7 +150,6 @@ class HTMLRequests {
       page,
       null
     );
-    console.log(searchUrlWithKey);
 
     try {
       const response = await axios.post(searchUrlWithKey, payload, {
@@ -255,16 +252,11 @@ class HTMLRequests {
             headers,
             timeout: 60000,
           });
-          // const data = JSON.stringify(scriptResponse, null, 2);
-          // Write to a text file
-          fs.appendFileSync("output.txt", scriptResponse.data, "utf8");
 
           if (scriptResponse.status === 200 && scriptResponse.data) {
             const searchInfo = new SearchInformations(
               String(scriptResponse.data)
             );
-            console.log("url = ", SearchInformations.searchUrl);
-            console.log("apikey = ", SearchInformations.apiKey);
 
             if (searchInfo.apiKey) {
               return searchInfo;
