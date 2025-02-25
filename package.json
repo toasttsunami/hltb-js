@@ -1,6 +1,6 @@
 {
   "name": "howlongtobeat-js",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Collects data from howlongtobeat.com using game title or id",
   "main": "src/HowLongToBeat.js",
   "scripts": {
