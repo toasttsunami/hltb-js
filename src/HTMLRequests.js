@@ -1,58 +1,6 @@
 const cheerio = require("cheerio");
 const axios = require("axios");
 const UserAgent = require("user-agents");
-const fs = require("fs");
-
-class SearchInformations {
-  constructor(scriptContent) {
-    this.apiKey = this.extractApiFromScript(scriptContent);
-    this.searchUrl = this.extractSearchUrlScript(scriptContent);
-    if (HTMLRequests.BASE_URL.endsWith("/") && this.searchUrl) {
-      this.searchUrl = this.searchUrl.replace(/^\//, "");
-    }
-  }
-
-  extractApiFromScript(scriptContent) {
-    const userIdApiKeyPattern = /users\s*:\s*{\s*id\s*:\s*"([^"]+)"/;
-    let matches = scriptContent.match(userIdApiKeyPattern);
-    if (matches) {
-      return matches[1];
-    }
-    const apiRegex = /"\/api\/\w+\/"(?:\.concat\("([^"]+)"\))+/g;
-    const apiMatch = scriptContent.match(apiRegex);
-
-    if (apiMatch) {
-      const concatRegex = /\.concat\("([^"]+)"\)/g;
-      const values = [...scriptContent.matchAll(concatRegex)].map(
-        (match) => match[1]
-      );
-      return values.join("");
-    }
-
-    return null;
-  }
-
-  extractSearchUrlScript(scriptContent) {
-    const pattern =
-      /fetch\(\s*["'](\/api\/[^"']*)["']((?:\s*\.concat\(\s*["']([^"']*)["']\s*\))*)\s*,/g;
-    let matches = [...scriptContent.matchAll(pattern)];
-
-    for (let match of matches) {
-      const endpoint = match[1];
-      const concatCalls = match[2];
-      const concatStrings = [
-        ...concatCalls.matchAll(/\.concat\(\s*["']([^"']*)["']\s*\)/g),
-      ].map((m) => m[1]);
-      const concatenatedStr = concatStrings.join("");
-
-      if (concatenatedStr === this.apiKey) {
-        return endpoint;
-      }
-    }
-
-    return null;
-  }
-}
 
 const SearchModifiers = {
   NONE: "",
@@ -65,7 +13,7 @@ const SearchModifiers = {
 class HTMLRequests {
   static BASE_URL = "https://howlongtobeat.com/";
   static REFERER_HEADER = HTMLRequests.BASE_URL;
-  static SEARCH_URL = HTMLRequests.BASE_URL + "api/s/";
+  static SEARCH_URL = HTMLRequests.BASE_URL + "api/search/";
   static GAME_URL = HTMLRequests.BASE_URL + "game";
 
   static getSearchRequestHeaders() {
@@ -133,17 +81,16 @@ class HTMLRequests {
     page = 1
   ) {
     const headers = HTMLRequests.getSearchRequestHeaders();
-    let searchInfoData = await HTMLRequests.sendWebsiteRequestGetCode(false);
-    if (!searchInfoData?.apiKey) {
-      searchInfoData = await HTMLRequests.sendWebsiteRequestGetCode(true);
+    let searchInfoData = await HTMLRequests.sendWebsiteRequestGetCode();
+
+    const apiKey = searchInfoData?.apiKey;
+    if (!apiKey) {
+      console.error("Failed to retrieve auth token from init endpoint");
+      return null;
     }
 
-    if (searchInfoData?.searchUrl) {
-      HTMLRequests.SEARCH_URL =
-        HTMLRequests.BASE_URL + searchInfoData.searchUrl;
-    }
+    headers["x-auth-token"] = apiKey;
 
-    const searchUrlWithKey = HTMLRequests.SEARCH_URL + searchInfoData.apiKey;
     const payload = HTMLRequests.getSearchRequestData(
       gameName,
       searchModifiers,
@@ -152,7 +99,7 @@ class HTMLRequests {
     );
 
     try {
-      const response = await axios.post(searchUrlWithKey, payload, {
+      const response = await axios.post(HTMLRequests.SEARCH_URL, payload, {
         headers,
         timeout: 60000,
       });
@@ -160,28 +107,7 @@ class HTMLRequests {
         return response.data;
       }
     } catch (error) {
-      // Try to call with the standard url adding the api key to the user
-      try {
-        const payloadWithUser = HTMLRequests.getSearchRequestData(
-          gameName,
-          searchModifiers,
-          page,
-          searchInfoData
-        );
-        const response = await axios.post(
-          HTMLRequests.SEARCH_URL,
-          payloadWithUser,
-          {
-            headers,
-            timeout: 60000,
-          }
-        );
-        if (response.status === 200) {
-          return response.data;
-        }
-      } catch (error) {
-        console.error("Error in sendWebRequest:", error);
-      }
+      console.error("Error in sendWebRequest:", error);
     }
     return null;
   }
@@ -230,39 +156,20 @@ class HTMLRequests {
     }
   }
 
-  static async sendWebsiteRequestGetCode(parseAllScripts) {
+  static async sendWebsiteRequestGetCode() {
     const headers = HTMLRequests.getTitleRequestHeaders();
     try {
-      const response = await axios.get(HTMLRequests.BASE_URL, {
+      // Fetch auth token from init endpoint
+      const initUrl = `${HTMLRequests.SEARCH_URL}init?t=${Date.now()}`;
+      const response = await axios.get(initUrl, {
         headers,
         timeout: 60000,
       });
 
-      if (response.status === 200 && response.data) {
-        const $ = cheerio.load(response.data);
-        const scripts = $("script[src]")
-          .map((_, el) => $(el).attr("src"))
-          .get();
-        const matchingScripts = parseAllScripts
-          ? scripts
-          : scripts.filter((src) => src.includes("_app-"));
-        for (const scriptUrl of matchingScripts) {
-          const fullScriptUrl = new URL(scriptUrl, HTMLRequests.BASE_URL).href;
-          const scriptResponse = await axios.get(fullScriptUrl, {
-            headers,
-            timeout: 60000,
-          });
-
-          if (scriptResponse.status === 200 && scriptResponse.data) {
-            const searchInfo = new SearchInformations(
-              String(scriptResponse.data)
-            );
-
-            if (searchInfo.apiKey) {
-              return searchInfo;
-            }
-          }
-        }
+      if (response && response.status === 200 && response.data && response.data.token) {
+        return {
+          apiKey: response.data.token,
+        };
       }
     } catch (error) {
       console.error("Error in sendWebsiteRequestGetCode:", error);
@@ -271,4 +178,4 @@ class HTMLRequests {
   }
 }
 
-module.exports = { HTMLRequests, SearchModifiers, SearchInformations };
+module.exports = { HTMLRequests, SearchModifiers };
