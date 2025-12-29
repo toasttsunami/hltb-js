@@ -6,6 +6,11 @@
   "scripts": {
     "test": "jest"
   },
+  "jest": {
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ]
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/toasttsunami/hltb-js.git"
@@ -26,6 +31,7 @@
     "user-agents": "^1.1.80"
   },
   "devDependencies": {
-    "jest": "^29.7.0"
+    "jest": "^29.7.0",
+    "nock": "^14.0.10"
   }
 }
